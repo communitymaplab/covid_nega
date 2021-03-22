@@ -3,7 +3,7 @@
 library(tidyverse)
 library(ggmap)
 
-register_google("AIzaSyA80S8sc25xS_lJaAn01fVCJPXTkYbNe1M")
+#register_google("xxxx")
 
 providers<-read_csv("data/Public Vaccine Providers 03122021.csv") %>%
   mutate(full_add=paste(`Street Address`,", ",City,", GA ",`ZIP Code`,sep=""))
