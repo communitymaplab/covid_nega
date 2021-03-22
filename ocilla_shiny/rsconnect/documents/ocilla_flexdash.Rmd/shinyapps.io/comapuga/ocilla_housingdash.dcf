@@ -1,0 +1,12 @@
+name: ocilla_housingdash
+title: ocilla_housingdash
+username:
+account: comapuga
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3039795
+bundleId: 4256914
+url: https://comapuga.shinyapps.io/ocilla_housingdash/
+when: 1614004108.04319
+asMultiple: FALSE
+asStatic: FALSE

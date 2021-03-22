@@ -1,0 +1,460 @@
+---
+title: 'Housing Conditions: Ocilla survey results'
+runtime: shiny
+output:
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    theme: cosmo
+    vertical_layout: fill
+    # logo: data/GICH_CML.png
+    # favicon: data/GICH_CML.png
+---
+
+
+```{r setup, include=FALSE}
+#############
+# Setup
+#############
+
+#Load required packages
+library(flexdashboard)
+library(leaflet)
+library(sf)
+library(tidyverse)
+library(highcharter)
+
+####################
+# Read in sample data, wards,
+# misentered parcels, and jitter parameter
+####################
+sample<-read_csv("data/ocilla_parcels_samplingframe.csv") %>%
+  mutate(parcel_num=parcel_no) %>%
+  select(parcel_num,prop_add,X,Y) %>%
+  filter(X<0) 
+
+sample_points<-st_as_sf(sample,coords=c("X","Y"),crs=4326,remove=FALSE) 
+
+parcel_points_issue<-read_csv("data/parcel_points_issue.csv")
+
+parcel_issues<-read_csv("data/parcel_issues.csv")
+#parcel_points_issue_long<-read_csv("data/parcel_points_issue_long.csv")
+parcel_points<-read_csv("data/parcel_points.csv")
+
+#Format file for download
+parcel_points1<-parcel_points %>%
+  select(date,parcel_no,prop_add,
+         property_type:photo4)
+
+parcel_points<-st_as_sf(parcel_points,coords=c("x","y"),crs=4326,remove=FALSE)
+
+file_date<-substr(file.info("data/parcel_points.csv")$mtime, 1,10)
+
+# 
+# #################
+# #Read in issue categories and define color scheme
+# ################
+# 
+#var_alias<-read_csv("data/var_alias.csv")
+
+color1<-"#1b9e77"
+color2<-"#377eb8"
+color3<-"#4daf4a"
+color4<-"#984ea3"
+color5<-"#ff7f00"
+color6<-"#e6ab02"
+ 
+var_cat<-c("Exterior","Windows/doors","Roof","Lot","Foundation","Stairs")
+color<-c(color1,color2,color3,color4,color5,color6)
+catcolor<-data.frame(cbind(var_cat,color))
+# 
+# var_alias<-left_join(var_alias,catcolor)
+# 
+
+
+```
+
+
+
+
+Survey map
+===================================== 
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+### Map of data coverage
+
+The map on the right shows data already collected. Red dots are surveyed properties, and grey dots are those yet to be surveyed. 
+
+```{r}
+# radioButtons("sample_prop1","Show unsurveyed parcels?",
+#             c("Yes"="**", "No"="0"))
+           
+radioButtons("bmap1", "Choose the base map", 
+             choices = c("Road map (Carto)"="CartoDB.Positron", 
+                         "Satellite imagery (ESRI)"="Esri.WorldImagery"),
+             selected="CartoDB.Positron")
+     
+ HTML("<br>Download the raw data<br>")
+
+downloadButton('downloaddata','Download Result Set')
+
+downloadHandler(filename = function() {
+     paste("surveydata_ocilla_",Sys.Date(),".csv",sep="")
+   },
+     content = function(file) {
+     write.csv(parcel_points1 %>% st_set_geometry(NULL), file, row.names = FALSE)
+   }
+)
+
+HTML("<br><br>")
+ HTML(paste("Data last updated",file_date,"<br><br>",sep=" "))
+ img(src='data/GICH.jpg', align = "left",width="70%")
+
+     
+```
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+```{r} 
+#Map
+parcel_points$cond_factor <- factor(parcel_points$cond_factor,levels=c("well maintained","sound","minor repairs needed", "moderate rehabilitation needed","substantial rehabilitation needed","dilapidated"))
+factpal <- colorFactor("Reds", parcel_points$cond_factor)
+
+#Remove once there is survey data
+median_lng<-median(sample$X)
+median_lat<-median(sample$Y)
+
+# output$map1<-renderLeaflet({
+#     leaflet(sample_points) %>% 
+#     setView(lng = median_lng, lat=median_lat, zoom = 14) %>%
+#     addCircles(data=sample_points,radius=10,stroke=FALSE,fillOpacity=0.8,color="#8a8483",
+#               layerId = sample_points$parcel_num,popup = ~prop_add) %>%
+#    addProviderTiles(input$bmap1, options = providerTileOptions(noWrap = TRUE))
+#     
+# })
+
+output$map1<-renderLeaflet({
+  leaflet(parcel_points) %>%
+    setView(lng = median_lng, lat=median_lat, zoom = 15)
+})
+
+observe({
+  
+  #ifelse(input$sample_prop1=="**",
+  leafletProxy('map1',data=parcel_points) %>%
+        clearShapes()%>% clearControls() %>%
+    addProviderTiles(input$bmap1, options = providerTileOptions(noWrap = TRUE)) %>%
+    addCircles(data=sample_points,radius=10,stroke=FALSE,fillOpacity=0.5,color="grey",
+               layerId = sample_points$parcel_num) %>%
+    addCircles(data=parcel_points,radius=12,opacity=1,fillOpacity=0.9,color="#222222",fillColor=
+                 ~factpal(cond_factor), weight=.5,layerId = parcel_points$fulcrum_id) %>%
+    addLegend("topright", pal = factpal, values = ~cond_factor,title="Housing condition")#,
+  # leafletProxy('map1',data=parcel_points) %>%
+  #       clearShapes()%>% clearControls() %>%
+  #   addProviderTiles(input$bmap1, options = providerTileOptions(noWrap = TRUE)) %>%
+  #   addCircles(data=parcel_points,radius=12,opacity=1,fillOpacity=0.9,color="#222222",fillColor=
+  #                ~factpal(cond_factor), weight=.5,layerId = parcel_points$fulcrum_id) %>%
+  #   addLegend("topright", pal = factpal, values = ~cond_factor,title="Housing condition"))
+})
+
+
+leafletOutput('map1',height="100%",width="100%")
+```
+
+Column {.tabset data-width=250}
+-----------------------------------------------------------------------
+
+### General 
+```{r}
+
+#Get the parcel ID from the clicked shape as an object, and then display textbox
+observe({
+  validate(need(input$map1_shape_click, FALSE))
+
+  prop_id<-parcel_points %>% filter(fulcrum_id==input$map1_shape_click$id)
+  output$text1 <- renderUI({
+    HTML(prop_id$textbox1)
+  })
+})
+
+htmlOutput("text1",width=200)
+```
+
+### Structural/Lot Conditions  
+
+```{r}
+
+#Get the parcel ID from the clicked shape as an object, and then display textbox
+observe({
+  validate(need(input$map1_shape_click, FALSE))
+  prop_id<-parcel_points %>% filter(fulcrum_id==input$map1_shape_click$id)
+  output$text1a <- renderUI({
+    HTML(prop_id$textbox2)
+  })
+})
+
+htmlOutput("text1a",width=200)
+```
+
+### Photos 
+
+```{r}
+
+#Get the parcel ID from the clicked shape as an object, and then display textbox
+observe({
+  validate(need(input$map1_shape_click, FALSE))
+  prop_id<-parcel_points %>% filter(fulcrum_id==input$map1_shape_click$id)
+  output$text1b <- renderUI({
+    HTML(prop_id$textbox3)
+  })
+})
+
+htmlOutput("text1b",width=200)
+```
+
+
+Common issues-graph
+===================================== 
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+This chart shows the most common issues in surveyed properties.
+
+```{r}
+HTML("<br><br>")
+ #HTML(paste("data last updated",file_date,"<br><br>",sep=" "))
+ img(src='data/GICH.jpg', align = "left",width="70%")
+```
+
+
+
+Column
+-----------------------------------------------------------------------
+
+```{r}
+#Code for legend below from https://stackoverflow.com/questions/47560870/r-highcharter-legend-based-on-point-color
+
+highchart()%>%
+  hc_add_series(parcel_issues, "bar", hcaes(x = var_alias, y = issue_pct, color=color),
+                name = "Pct. properties w/issue",showInLegend=F) %>%
+  hc_xAxis(categories=parcel_issues$var_alias) %>%
+  hc_add_series(data = data.frame(), name = "Exterior", color = color1,
+               marker = list(symbol = "circle"), type = "scatter") %>%
+  hc_add_series(data = data.frame(), name = "Windows/doors", color = color2,
+               marker = list(symbol = "circle"), type = "scatter")%>%
+  hc_add_series(data = data.frame(), name = "Roof", color = color3,
+               marker = list(symbol = "circle"), type = "scatter") %>%
+    hc_add_series(data = data.frame(), name = "Lot", color = color4,
+               marker = list(symbol = "circle"), type = "scatter") %>%
+    hc_add_series(data = data.frame(), name = "Foundation", color = color5,
+               marker = list(symbol = "circle"), type = "scatter") %>%
+    hc_add_series(data = data.frame(), name = "Stairs", color = color6,
+               marker = list(symbol = "circle"), type = "scatter")
+
+```
+
+Common issues-map
+===================================== 
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+### Select an issue
+
+Select an issue from the menus below. Properties with the issue will be shown in red on the map.
+
+```{r}
+
+radioButtons("issue_cat","Category selection",
+            choices=c("Exterior","Windows/doors","Roof",
+                      "Lot","Foundation","Stairs"),
+            selected="Exterior")
+
+conditionalPanel(
+      condition = "input.issue_cat == 'Exterior'",
+      selectInput("issue_ext","Issue selection",
+             choices=c("Repainting needed"="ext_repaint",
+                "Cracked/minor dry rot"="ext_cracked",
+                "Needs replacement"="ext_needs_replace",
+                "Chimney needs repair"="ext_chimney",
+                "Missing/no siding"="ext_nosiding"),
+             selected="ext_repaint"))
+
+conditionalPanel(
+      condition = "input.issue_cat == 'Windows/doors'",
+      selectInput("issue_wind","Issue selection",
+                choices=c("Repainting needed"="window_repaint",
+                "Cracked panes"="window_crackedpanes",
+                "Replace 1-3 windows"="window_minreplace",
+                "Replace >3 windows"="window_majreplace")))
+
+conditionalPanel(
+      condition = "input.issue_cat == 'Roof'",
+      selectInput("issue_roof","Issue selection",
+                choices=c("Gutters need repair"="roof_gutters",
+                "Cracked/peeling shingles"="roof_shingles",
+                "Partial re-roofing needed"="roof_reroof_part",
+                "Total re-roofing needed"="roof_reroof_tot",
+                "New roofing structure needed"="roof_newstructure")))
+
+conditionalPanel(
+      condition = "input.issue_cat == 'Lot'",
+      selectInput("issue_lot","Issue selection",
+                choices=c("Lawn overgrown/weeds"="lot_assess.lot_weeds",
+                "Missing ground cover"="lot_missingcover",
+                "Dead/hazardous trees"="lot_trees",
+                "Inoperable vehicle in yard"="lot_inop_vehicle",
+                "Major cleanup/junk in yard"="lot_junk",
+                "Porch used as storage"="lot_porchstorage",
+                "Graffiti on house/property"="lot_graffiti")))
+
+conditionalPanel(
+      condition = "input.issue_cat == 'Foundation'",
+      selectInput("issue_found","Issue selection",
+                choices=c("Complete replacement"="found_compreplace",
+                "Cracked"="found_cracked",
+                "Partial replacement"="found_partreplace")))
+
+conditionalPanel(
+      condition = "input.issue_cat == 'Stairs'",
+      selectInput("issue_stairs","Issue selection",
+                choices=c("Cracked/minor repairs needed"="stairs_cracked",
+                "Major repair needed"="stairs_majorrepair",
+                "Repainting needed"="stairs_repaint")))
+
+
+ radioButtons("bmap2", "Choose the base map",
+             choices = c("Road map (Carto)"="CartoDB.Positron", 
+                         "Satellite imagery (ESRI)"="Esri.WorldImagery"),
+             selected="CartoDB.Positron")
+
+ 
+  HTML("<br>Download properties with this issue<br>")
+  downloadButton('downloadDat','Download Result Set')
+  downloadHandler(filename = function() {
+     paste("surveyDat_ocilla_issuemap_",Sys.Date(),".csv",sep="")
+    },
+     content = function(file) {
+     write.csv(filtereddata()%>% st_set_geometry(NULL), file, row.names = FALSE)
+   }
+  )
+
+HTML("<br><br>")
+HTML(paste("Data last updated",file_date,"<br><br>",sep=" "))
+img(src='data/GICH.jpg', align = "left",width="70%")   
+```
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+```{r} 
+
+filtereddata <- reactive({
+ ifelse(input$issue_cat == 'Exterior',
+         filtervar<-input$issue_ext,
+ ifelse(input$issue_cat == "Windows/doors",
+         filtervar<-input$issue_wind,
+ ifelse(input$issue_cat == "Roof",
+         filtervar<-input$issue_roof,
+ ifelse(input$issue_cat == "Lot",
+         filtervar<-input$issue_lot,
+ ifelse(input$issue_cat == "Foundation",
+         filtervar<-input$issue_found,
+ ifelse(input$issue_cat == "Stairs",
+         filtervar<-input$issue_stairs,
+         filtervar<-"lot_weeds"))))))
+  parcel_points_issue %>% 
+    filter(value==filtervar) %>%
+    st_as_sf(coords=c("x","y"),crs=4326)
+  })
+
+#Map
+
+ output$map2<-renderLeaflet({
+   leaflet() %>%
+     setView(lng = median(parcel_points$x), lat=median(parcel_points$y), zoom = 14) %>%
+   addProviderTiles(input$bmap2, options = providerTileOptions(noWrap = TRUE)) %>%
+   addCircles(data=parcel_points,radius=12,opacity=0.8,fillOpacity=0.5,color="#222222",fillColor=
+                "grey", weight=.5,layerId = parcel_points$fulcrum_id) %>%
+   addCircles(data=filtereddata(),radius=18,opacity=1,fillOpacity=0.9,color="#222222",fillColor=
+                "red", weight=.5,layerId = filtereddata()$fulcrum_id)
+})
+
+
+leafletOutput('map2',height="100%",width="100%")
+```
+
+Column {.tabset data-width=250}
+-----------------------------------------------------------------------
+
+### General 
+```{r}
+
+#Get the parcel ID from the clicked shape as an object, and then display textbox
+observe({
+  validate(need(input$map2_shape_click, FALSE))
+  prop_id<-parcel_points %>% filter(fulcrum_id==input$map2_shape_click$id)
+  output$text2 <- renderUI({
+    HTML(prop_id$textbox1)
+  })
+})
+
+htmlOutput("text2",width=200)
+```
+
+### Structural/Lot Conditions  
+
+```{r}
+
+#Get the parcel ID from the clicked shape as an object, and then display textbox
+observe({
+  validate(need(input$map2_shape_click, FALSE))
+  prop_id<-parcel_points %>% filter(fulcrum_id==input$map2_shape_click$id)
+  output$text2a <- renderUI({
+    HTML(prop_id$textbox2)
+  })
+})
+
+htmlOutput("text2a",width=200)
+```
+
+### Photos 
+
+```{r}
+
+#Get the parcel ID from the clicked shape as an object, and then display textbox
+observe({
+  validate(need(input$map2_shape_click, FALSE))
+  prop_id<-parcel_points %>% filter(fulcrum_id==input$map2_shape_click$id)
+  output$text2b <- renderUI({
+    HTML(prop_id$textbox3)
+  })
+})
+
+htmlOutput("text2b",width=200)
+```
+
+About this tool
+===================================== 
+
+This web application provides a way to view the results of your community housing assessment. The first tab, Survey map, provides a map showing the overall assessment of each property. These are classified based on a points system. Fulcrum shows the points associated with each housing condition, and these are added together to place properties on the following scale:
+
+* **Well maintained** (Less than 3 points): New or in good condition. Does not need any repairs.
+* **Sound** (3-9 points): In good condition but is in need of some maintenance work, such as repainting or minor repairs.
+* **Minor repairs needed** (10-14 points): Housing unit has several deferred maintenance issues or one moderate repair project (i.e. replacement of several windows)
+* **Moderate rehabilitation needed** (15-39 points): Requires multiple repairs, including the repair/replacement of one major component.
+* **Substantial rehabilitation needed** (40-55 points): Requires the repair and replacement of most or all exterior components.
+* **Dilapidated** (More than 55 points): Housing unit suffers from excessive neglect, appears structurally unsound and not safe for human habitation, and may not be feasible to rehabilitate.
+
+You can click on any of the red colored points to see more information about the property. They grey dots show unsurveyed parcels. This map allows you to see the locations of the most distressed housing overall, which can be useful in redevelopment efforts.
+
+The third tab, Common issues-map, allows you to see properties with each type of issue. You can select the issue by type (Roof, Stairs, etc.) and then specifically from the drop down menu. The red dots are properties with that specific issue. As with the first tab, you can click on a property for more information. This map allows you to see where properties with common issues are located.
+
+The two map tabs also include download buttons to download data as a CSV file. These can be opened in Microsoft Excel, and they also include geographic coordinates if your team includes someone able to use GIS software. On the survey map, the download button links to all surveyed properties.  On the common issues map, you can download a list of properties with just the selected issue, which will also be shown in the "value" column. 
+
+The second tab, Common issues-graph, shows the most common issues. The length of the bar reflects the percentage of properties with each issue. So a value of 25 would mean 25% of properties had that issue. The bars are colored based on the issue type--affecting the roof, foundation, stairs, etc. The graph allows you to identify the issues your team might want to focus on.
+
+A short video demonstration of this app is also available [at this link.](https://www.youtube.com/watch?v=XjWfjgkJtS0&)

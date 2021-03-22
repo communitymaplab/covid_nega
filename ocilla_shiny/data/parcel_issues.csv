@@ -1,0 +1,27 @@
+var,total,issue_count,issue_pct,var_alias,var_cat,color
+stairs_repaint,7417,318,4.29,Stairs: Repainting needed,Stairs,#e6ab02
+window_repaint,7417,300,4.04,Windows/doors: Repainting needed,Windows/doors,#377eb8
+lot_weeds,7417,270,3.64,Lot: Lawn overgrown/weeds,Lot,#984ea3
+ext_repaint,7417,239,3.22,Exterior: Repainting needed,Exterior,#1b9e77
+lot_trees,7417,154,2.08,Lot: Dead/hazardous trees,Lot,#984ea3
+ext_cracked,7417,143,1.93,Exterior: Cracked/minor dry rot,Exterior,#1b9e77
+roof_shingles,7417,143,1.93,Roof: Cracked/peeling shingles,Roof,#4daf4a
+found_cracked,7417,112,1.51,Foundation: Cracked,Foundation,#ff7f00
+stairs_cracked,7417,100,1.35,Stairs: Cracked/minor repairs needed,Stairs,#e6ab02
+lot_inop_vehicle,7417,95,1.28,Lot: Inoperable vehicle in yard,Lot,#984ea3
+window_crackedpanes,7417,68,0.92,Windows/doors: Cracked panes,Windows/doors,#377eb8
+lot_missingcover,7417,63,0.85,Lot: Missing ground cover,Lot,#984ea3
+stairs_majorrepair,7417,55,0.74,Stairs: Major repair needed,Stairs,#e6ab02
+roof_reroof_tot,7417,54,0.73,Roof: Total re-roofing needed,Roof,#4daf4a
+window_minreplace,7417,48,0.65,Windows/doors: Replace 1-3 windows,Windows/doors,#377eb8
+ext_needs_replace,7417,43,0.58,Exterior: Needs replacement,Exterior,#1b9e77
+lot_junk,7417,41,0.55,Lot: Major cleanup/junk in yard,Lot,#984ea3
+roof_reroof_part,7417,41,0.55,Roof: Partial re-roofing needed,Roof,#4daf4a
+roof_newstructure,7417,29,0.39,Roof: New roofing structure needed,Roof,#4daf4a
+lot_porchstorage,7417,27,0.36,Lot: Porch used as storage,Lot,#984ea3
+window_majreplace,7417,25,0.34,Windows/doors: Replace >3 windows,Windows/doors,#377eb8
+found_compreplace,7417,17,0.23,Foundation: Complete replacement,Foundation,#ff7f00
+found_partreplace,7417,16,0.22,Foundation: Partial replacement,Foundation,#ff7f00
+roof_gutters,7417,16,0.22,Roof: Gutters need repair,Roof,#4daf4a
+ext_chimney,7417,7,0.09,Exterior: Chimney needs repair,Exterior,#1b9e77
+ext_nosiding,7417,6,0.08,Exterior: Missing/no siding,Exterior,#1b9e77

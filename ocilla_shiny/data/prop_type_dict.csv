@@ -1,0 +1,8 @@
+property_type,prop_type_name
+mob_home,Mobile home
+multifamily,Multifamily
+non_residential,Non-residential
+sf_gar_attach,"Single family home, attached garage"
+sf_gar_detach,"Single family home, detached garage"
+sf_nogar,"Single family home, no garage"
+vacant,Vacant

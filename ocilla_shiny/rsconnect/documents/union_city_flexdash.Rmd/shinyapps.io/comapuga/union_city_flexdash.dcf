@@ -1,0 +1,12 @@
+name: union_city_flexdash
+title: union_city_flexdash
+username:
+account: comapuga
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 354511
+bundleId: 1635386
+url: https://comapuga.shinyapps.io/union_city_flexdash/
+when: 1539202670.92964
+asMultiple: FALSE
+asStatic: FALSE

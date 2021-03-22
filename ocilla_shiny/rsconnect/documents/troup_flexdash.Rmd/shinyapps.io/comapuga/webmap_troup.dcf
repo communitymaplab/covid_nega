@@ -1,0 +1,12 @@
+name: webmap_troup
+title: webmap_troup
+username:
+account: comapuga
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 935569
+bundleId: 2092535
+url: https://comapuga.shinyapps.io/webmap_troup/
+when: 1558121938.79713
+asMultiple: FALSE
+asStatic: FALSE

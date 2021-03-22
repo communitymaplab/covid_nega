@@ -1,0 +1,28 @@
+var,var_alias,var_cat,color
+ext_repaint,Exterior: Repainting needed,Exterior,#1b9e77
+ext_cracked,Exterior: Cracked/minor dry rot,Exterior,#1b9e77
+ext_needs_replace,Exterior: Needs replacement,Exterior,#1b9e77
+ext_chimney,Exterior: Chimney needs repair,Exterior,#1b9e77
+ext_nosiding,Exterior: Missing/no siding,Exterior,#1b9e77
+window_repaint,Windows/doors: Repainting needed,Windows/doors,#377eb8
+window_crackedpanes,Windows/doors: Cracked panes,Windows/doors,#377eb8
+window_minreplace,Windows/doors: Replace 1-3 windows,Windows/doors,#377eb8
+window_majreplace,Windows/doors: Replace >3 windows,Windows/doors,#377eb8
+roof_gutters,Roof: Gutters need repair,Roof,#4daf4a
+roof_shingles,Roof: Cracked/peeling shingles,Roof,#4daf4a
+roof_reroof_part,Roof: Partial re-roofing needed,Roof,#4daf4a
+roof_reroof_tot,Roof: Total re-roofing needed,Roof,#4daf4a
+roof_newstructure,Roof: New roofing structure needed,Roof,#4daf4a
+lot_weeds,Lot: Lawn overgrown/weeds,Lot,#984ea3
+lot_missingcover,Lot: Missing ground cover,Lot,#984ea3
+lot_trees,Lot: Dead/hazardous trees,Lot,#984ea3
+lot_inop_vehicle,Lot: Inoperable vehicle in yard,Lot,#984ea3
+lot_junk,Lot: Major cleanup/junk in yard,Lot,#984ea3
+lot_porchstorage,Lot: Porch used as storage,Lot,#984ea3
+lot_graffiti,Lot: Graffiti on house/property,Lot,#984ea3
+found_compreplace,Foundation: Complete replacement,Foundation,#ff7f00
+found_cracked,Foundation: Cracked,Foundation,#ff7f00
+found_partreplace,Foundation: Partial replacement,Foundation,#ff7f00
+stairs_cracked,Stairs: Cracked/minor repairs needed,Stairs,#e6ab02
+stairs_majorrepair,Stairs: Major repair needed,Stairs,#e6ab02
+stairs_repaint,Stairs: Repainting needed,Stairs,#e6ab02
