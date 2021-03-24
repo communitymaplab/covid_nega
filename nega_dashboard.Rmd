@@ -1,0 +1,151 @@
+---
+title: "NE GA Vaccine and Service Providers"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    theme: lumen
+---
+
+```{r setup, include=FALSE}
+
+#load required packages
+library(flexdashboard)
+library(sf)
+library(shiny)
+library(leaflet)
+library(BAMMtools) #nice jenks
+
+library(dplyr)
+
+#load and format data #####
+
+#this does not need to be run everytime but is part of the workflow to download
+#source("source/download_census_vars.R")
+
+#this cleans and subsets the spatial variables
+#it also defines the breaks for each individual variable
+source("source/format_spatial_vars.R", local = knitr::knit_global())
+
+
+```
+
+Service Area Maps
+======================================
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+### Map of demographics, service providers, and vaccine providers
+
+
+```{r}
+selectInput("county_choice", "Select a county:",
+            choices = c("All", "Barrow", "Clarke", "Elbert", "Greene", "Jackson",
+                        "Madison", "Morgan", "Oconee", "Oglethorpe", "Walton"),
+            selected = "All")
+```
+
+
+
+```{r}
+selectInput("census_choice", "Select a census variable:",
+            choices = c("Civilians with Disabilities" = "disable_pop", 
+                        "Households without Vehicles" = "noveh_pop",
+                        "Minority Population" = "nonwht_pop",
+                        "Persons (5+) Who Speak English Less Than Well" = "engnotwell_pop",
+                        "Persons Over 65 Years Old"= "age65_pop", 
+                        "Persons Below Poverty" = "pov_pop", 
+                        "Persons (25+) without High School Diploma" = "lesshsdip_pop"),
+            selected = "pov_pop")
+```
+
+
+```{r}
+sliderInput("poly_alpha", "Census Data Opacity:",
+            min = 0, max = 1, value = 1)
+```
+
+
+Column
+-----------------------------------------------------------------------
+
+
+```{r}
+output$map1 <- renderLeaflet({
+  
+  #select variable
+  census.map <- select(census.vars, County, input$census_choice) 
+  colnames(census.map)[2] <- "value"
+  
+  #create color palette and labels
+  census.cols <- data.frame(color_pal = c("YlGnBu", "Reds",  "Purples", 
+                   "Blues", "Oranges", "Greens", "PuRd"),
+                   census_var = c("disable_pop", "noveh_pop", "nonwht_pop", 
+                                  "engnotwell_pop", "age65_pop", "pov_pop", "lesshsdip_pop"),
+                   census_label = c("Civilians with Disabilities",
+                                    "Households without Vehicles",
+                                    "Minority Population",
+                                    "Persons (+5) Who Speak\nEnglish Less Than Well",
+                                    "Persons Over 65 Years Old",
+                                    "Persons Below Poverty",
+                                    "Persons (25+) without\nHigh School Diploma"))
+  current.setting <- filter(census.cols, census_var == input$census_choice)
+
+  #need range for domain
+  col.domain <- c(0,max(census.map$value))
+  col.breaks <- getJenksBreaks(c(0,census.map$value), 6, subset = NULL)
+  
+  binpal <- colorBin(
+  palette = current.setting$color_pal,
+  domain = col.domain,
+  bins = col.breaks
+  )
+  
+  if(input$county_choice != "All"){
+    census.map <- filter(census.map, County == input$county_choice)
+  }
+  
+  #crop points to a 5km buffer around this area
+  crop.points <- services.all[st_buffer(census.map, 0.05),]
+
+  map1 <- leaflet(census.map) %>%
+    addTiles() %>%
+    addPolygons(fillOpacity = input$poly_alpha,
+              fillColor = ~binpal(value),
+              stroke = T,
+              color = "black", opacity = 1, weight = 0.5) %>%
+    addCircles(data = crop.points, color = "black", opacity = 1,
+             popup = ~textbox, layerId = ~id) %>%
+    addLegend("bottomright", pal = binpal, values = ~value,
+              title = current.setting$census_label,
+              opacity = 1)
+
+  map1
+})
+
+leafletOutput('map1', height = "95vh")
+```
+
+
+Column {data-width=250}
+-----------------------------------------------------------------------
+
+### Provider Info
+
+```{r, eval = F}
+#this was giving me lots of trouble, so I gave up
+observeEvent(input$map1_circle_click,{
+  serv_text <- services.all %>% filter(id==input$map1_circle_click$id)
+  output$text1 <- renderUI({
+    HTML(serv_text$textbox)
+  })
+})
+
+htmlOutput("text1",width=200)
+```
+
+
+About these maps
+=====================
+
