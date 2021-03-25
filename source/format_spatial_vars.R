@@ -18,7 +18,15 @@ census.vars <- st_read("data/census_area.gpkg",stringsAsFactors=FALSE) %>%
   filter(county_GEOID %in% service.area$GEOID) %>%
   #add county name
   left_join(st_drop_geometry(service.area), by = c("county_GEOID" = "GEOID")) %>%
-  rename(County = NAME)
+  rename(County = NAME) %>%
+  #create fancy popup box
+  mutate(popup_text = paste0("<strong>Civilians with Disabilities: </strong>", disable_pop, "<br>",
+                             "<strong>Households without Vehicles: </strong>", noveh_pop, "<br>",
+                             "<strong>Minority Population: </strong>", nonwht_pop, "<br>",
+                             "<strong>Persons(5+) who Speak English Less Than Well: </strong>", engnotwell_pop, "<br>",
+                             "<strong>Persons Over 65: </strong>", age65_pop, "<br>",
+                             "<strong>Persons Below Poverty: </strong>", pov_pop, "<br>",
+                             "<strong>Persons (25+) without a Highschool Diploma: </strong>", lesshsdip_pop, "<br>"))
 
 # Spatial Points #####
 vaccine.prov <- read.csv("data/providers_geocoded_2021_03_19.csv", stringsAsFactors = F) %>%

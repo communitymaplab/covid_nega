@@ -76,7 +76,7 @@ Column
 output$map1 <- renderLeaflet({
   
   #select variable
-  census.map <- select(census.vars, County, input$census_choice) 
+  census.map <- select(census.vars, County, input$census_choice, popup_text) 
   colnames(census.map)[2] <- "value"
   
   #create color palette and labels
@@ -93,6 +93,7 @@ output$map1 <- renderLeaflet({
                                     "Persons (25+) without\nHigh School Diploma")) %>%
     mutate(color_pal=as.character(color_pal),
            census_label=as.character(census_label))
+  
   current.setting <- filter(census.cols, census_var == input$census_choice)
   legend_title<-current.setting$census_label
 
@@ -121,14 +122,15 @@ output$map1 <- renderLeaflet({
   map1 <- leaflet(census.map) %>%
     addTiles(urlTemplate="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>') %>%
+        addPolygons(data=county_map,
+                fillOpacity=0,
+                color="black",weight=1) %>%
     addPolygons(data=census.map,
                 fillOpacity = input$poly_alpha,
               fillColor = ~binpal(value),
               stroke = T,
-              color = "black", opacity = 0.4, weight = 0.5) %>%
-    addPolygons(data=county_map,
-                fillOpacity=0,
-                color="black",weight=1) %>%
+              color = "black", opacity = 0.4, weight = 0.5,
+              popup = ~popup_text) %>%
     addCircles(data = crop.points, color = "black", opacity = 1,
              #popup = ~textbox, 
              layerId = ~prov_id) %>%
@@ -152,7 +154,6 @@ Column {data-width=250}
 
 ```{r}
 
-#this was giving me lots of trouble, so I gave up
 observe({
   validate(need(input$map1_shape_click, FALSE))
   validate(need(input$map1_shape_click %in% services.all$prov_id,FALSE))
