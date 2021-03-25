@@ -66,7 +66,7 @@ sliderInput("poly_alpha", "Census Data Opacity:",
             min = 0, max = 1, value = 0.5)
 ```
 
-Designed by Michelle Evans & Jerry Shannon at the [Community Mapping Lab](http://communitymappinglab.org)
+Designed at the [Community Mapping Lab](http://communitymappinglab.org)
 
 Column
 -----------------------------------------------------------------------
@@ -122,15 +122,15 @@ output$map1 <- renderLeaflet({
   map1 <- leaflet(census.map) %>%
     addTiles(urlTemplate="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>') %>%
-        addPolygons(data=county_map,
-                fillOpacity=0,
-                color="black",weight=1) %>%
     addPolygons(data=census.map,
                 fillOpacity = input$poly_alpha,
               fillColor = ~binpal(value),
               stroke = T,
               color = "black", opacity = 0.4, weight = 0.5,
               popup = ~popup_text) %>%
+    addPolylines(data=county_map,
+                fillOpacity=0,
+                color="black",weight=1) %>%
     addCircles(data = crop.points, color = "black", opacity = 1,
              #popup = ~textbox, 
              layerId = ~prov_id) %>%
@@ -171,9 +171,10 @@ htmlOutput("text1",width=200)
 About this map
 =====================
 
-# Purpose:
-This dashboard provides an interactive visualization of COVID-19 vaccinations sites and seven demographic characteristics for census tracts in the following counties of Northeast Georgia: **Barrow**, Clarke**, **Elbert**, Greene**, Jackson**, **Madison**, **Morgan, Oconee**, **Oglethorpe**, and **Walton**. 
-## How to use this map:
-Begin by selecting the county of interest from the first drop down menu. Then select the census variable you would like to be shown. Use the opacity slider to adjust the transparency of the colors – a higher opacity will make the colors appear darker. Click on a census tract or vaccination site to view detailed information in a popup window. **Note: when viewing data for a single county you will see all vaccination providers inside the county and within 5km from the county boundary.** 
-### Data Sources: 
-The demographic data is from the 2015-2019 American Community Survey and the vaccination site data was produced by the Department of Public Health.    
+This dashboard provides an interactive visualization of COVID-19 vaccinations sites and seven demographic characteristics for census tracts in the following counties of Northwest Georgia: Barrow, Clarke, Elbert, Greene, Jackson, Madison, Morgan, Oconee, Oglethorpe, and Walton. It was created by Michelle V. Evans, Jerry Shannon, and Aidan Hysjulien at the [Community Mapping Lab](http://communitymappinglab.org) at UGA.
+
+**How to use this map:**
+Begin by selecting the county of interest from the first drop down menu. Then select the census variable you would like to be shown. Use the opacity slider to adjust the transparency of the colors – a higher opacity will make the colors appear darker. Click on a census tract or vaccination site to view detailed information in a popup window. *Note: when viewing data for a single county you will see all vaccination providers inside the county and within 5km from the county boundary.*
+
+**Data Sources:**
+The demographic data is from the 2015-2019 American Community Survey and the vaccination site data was produced by the Department of Public Health.
