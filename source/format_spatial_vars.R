@@ -12,7 +12,7 @@ service.area <- st_read("data/nega_servicearea_cty.gpkg",stringsAsFactors=FALSE)
 
 census.vars <- st_read("data/census_area.gpkg",stringsAsFactors=FALSE) %>%
   #select seven variables we need
-  select(GEOID, disable_pop, noveh_pop, nonwht_pop, engnotwell_pop, age65_pop, pov_pop, lesshsdip_pop) %>%
+  select(GEOID, total_pop,disable_pop, noveh_pop, nonwht_pop, engnotwell_pop, age65_pop, pov_pop, lesshsdip_pop) %>%
   #filter to only the counteies we need
   mutate(county_GEOID = substr(GEOID, 1,5)) %>%
   filter(county_GEOID %in% service.area$GEOID) %>%
@@ -20,7 +20,8 @@ census.vars <- st_read("data/census_area.gpkg",stringsAsFactors=FALSE) %>%
   left_join(st_drop_geometry(service.area), by = c("county_GEOID" = "GEOID")) %>%
   rename(County = NAME) %>%
   #create fancy popup box
-  mutate(popup_text = paste0("<strong>Civilians with Disabilities: </strong>", disable_pop, "<br>",
+  mutate(popup_text = paste0("<strong>Total population: </strong>", total_pop, "<br>",
+                             "<strong>Civilians with Disabilities: </strong>", disable_pop, "<br>",
                              "<strong>Households without Vehicles: </strong>", noveh_pop, "<br>",
                              "<strong>Minority Population: </strong>", nonwht_pop, "<br>",
                              "<strong>Persons(5+) who Speak English Less Than Well: </strong>", engnotwell_pop, "<br>",
