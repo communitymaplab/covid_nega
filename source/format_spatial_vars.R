@@ -7,10 +7,10 @@ library(sf)
 library(dplyr)
 
 #Census polygons ####
-service.area <- st_read("data/nega_servicearea_cty.gpkg") %>%
+service.area <- st_read("data/nega_servicearea_cty.gpkg",stringsAsFactors=FALSE) %>%
   select(GEOID, NAME)
 
-census.vars <- st_read("data/census_area.gpkg") %>%
+census.vars <- st_read("data/census_area.gpkg",stringsAsFactors=FALSE) %>%
   #select seven variables we need
   select(GEOID, disable_pop, noveh_pop, nonwht_pop, engnotwell_pop, age65_pop, pov_pop, lesshsdip_pop) %>%
   #filter to only the counteies we need
@@ -19,7 +19,6 @@ census.vars <- st_read("data/census_area.gpkg") %>%
   #add county name
   left_join(st_drop_geometry(service.area), by = c("county_GEOID" = "GEOID")) %>%
   rename(County = NAME)
-
 
 # Spatial Points #####
 vaccine.prov <- read.csv("data/providers_geocoded_2021_03_19.csv", stringsAsFactors = F) %>%

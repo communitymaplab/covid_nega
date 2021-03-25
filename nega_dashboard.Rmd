@@ -27,7 +27,6 @@ library(dplyr)
 #it also defines the breaks for each individual variable
 source("source/format_spatial_vars.R", local = knitr::knit_global())
 
-
 ```
 
 Service Area Maps
@@ -38,6 +37,7 @@ Column {.sidebar}
 
 ### Map of demographics, service providers, and vaccine providers
 
+Click on a provider point for more information.
 
 ```{r}
 selectInput("county_choice", "Select a county:",
@@ -63,9 +63,11 @@ selectInput("census_choice", "Select a census variable:",
 
 ```{r}
 sliderInput("poly_alpha", "Census Data Opacity:",
-            min = 0, max = 1, value = 1)
+            min = 0, max = 1, value = 0.5)
 ```
 
+Designed by Michelle Evans & Jerry Shannon
+at the [Community Mapping Lab](http://communitymappinglab.org)
 
 Column
 -----------------------------------------------------------------------
@@ -89,13 +91,16 @@ output$map1 <- renderLeaflet({
                                     "Persons (+5) Who Speak\nEnglish Less Than Well",
                                     "Persons Over 65 Years Old",
                                     "Persons Below Poverty",
-                                    "Persons (25+) without\nHigh School Diploma"))
+                                    "Persons (25+) without\nHigh School Diploma")) %>%
+    mutate(color_pal=as.character(color_pal),
+           census_label=as.character(census_label))
   current.setting <- filter(census.cols, census_var == input$census_choice)
+  legend_title<-current.setting$census_label
 
   #need range for domain
   col.domain <- c(0,max(census.map$value))
   col.breaks <- getJenksBreaks(c(0,census.map$value), 6, subset = NULL)
-  
+
   binpal <- colorBin(
   palette = current.setting$color_pal,
   domain = col.domain,
@@ -105,19 +110,31 @@ output$map1 <- renderLeaflet({
   if(input$county_choice != "All"){
     census.map <- filter(census.map, County == input$county_choice)
   }
+
+  county_map<-service.area
+  if(input$county_choice != "All"){  
+    county_map<-service.area %>% filter(NAME==input$county_choice)
+  }
   
-  #crop points to a 5km buffer around this area
+#crop points to a 5km buffer around this area
   crop.points <- services.all[st_buffer(census.map, 0.05),]
 
   map1 <- leaflet(census.map) %>%
     addTiles() %>%
-    addPolygons(fillOpacity = input$poly_alpha,
+    addPolygons(data=census.map,
+                fillOpacity = input$poly_alpha,
               fillColor = ~binpal(value),
               stroke = T,
-              color = "black", opacity = 1, weight = 0.5) %>%
+              color = "black", opacity = 0.4, weight = 0.5) %>%
+    addPolygons(data=county_map,
+                fillOpacity=0,
+                color="black",weight=1) %>%
     addCircles(data = crop.points, color = "black", opacity = 1,
-             popup = ~textbox, layerId = ~id) %>%
-    addLegend("bottomright", pal = binpal, values = ~value,
+             #popup = ~textbox, 
+             layerId = ~prov_id) %>%
+    addLegend("bottomright",
+              pal = binpal,
+              values = ~value,
               title = current.setting$census_label,
               opacity = 1)
 
@@ -133,10 +150,13 @@ Column {data-width=250}
 
 ### Provider Info
 
-```{r, eval = F}
+```{r}
+
 #this was giving me lots of trouble, so I gave up
-observeEvent(input$map1_circle_click,{
-  serv_text <- services.all %>% filter(id==input$map1_circle_click$id)
+observe({
+  validate(need(input$map1_shape_click, FALSE))
+
+  serv_text <- services.all %>% filter(prov_id==input$map1_shape_click$id)
   output$text1 <- renderUI({
     HTML(serv_text$textbox)
   })
@@ -146,6 +166,7 @@ htmlOutput("text1",width=200)
 ```
 
 
-About these maps
+About this map
 =====================
 
+To be written.
