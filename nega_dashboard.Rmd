@@ -171,4 +171,9 @@ htmlOutput("text1",width=200)
 About this map
 =====================
 
-To be written.
+# Purpose:
+This dashboard provides an interactive visualization of COVID-19 vaccinations sites and seven demographic characteristics for census tracts in the following counties of Northeast Georgia: **Barrow**, Clarke**, **Elbert**, Greene**, Jackson**, **Madison**, **Morgan, Oconee**, **Oglethorpe**, and **Walton**. 
+## How to use this map:
+Begin by selecting the county of interest from the first drop down menu. Then select the census variable you would like to be shown. Use the opacity slider to adjust the transparency of the colors – a higher opacity will make the colors appear darker. Click on a census tract or vaccination site to view detailed information in a popup window. **Note: when viewing data for a single county you will see all vaccination providers inside the county and within 5km from the county boundary.** 
+### Data Sources: 
+The demographic data is from the 2015-2019 American Community Survey and the vaccination site data was produced by the Department of Public Health.    
