@@ -119,7 +119,8 @@ output$map1 <- renderLeaflet({
   crop.points <- services.all[st_buffer(census.map, 0.05),]
 
   map1 <- leaflet(census.map) %>%
-    addTiles() %>%
+    addTiles(urlTemplate="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>') %>%
     addPolygons(data=census.map,
                 fillOpacity = input$poly_alpha,
               fillColor = ~binpal(value),
