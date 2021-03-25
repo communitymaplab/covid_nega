@@ -66,8 +66,7 @@ sliderInput("poly_alpha", "Census Data Opacity:",
             min = 0, max = 1, value = 0.5)
 ```
 
-Designed by Michelle Evans & Jerry Shannon
-at the [Community Mapping Lab](http://communitymappinglab.org)
+Designed by Michelle Evans & Jerry Shannon at the [Community Mapping Lab](http://communitymappinglab.org)
 
 Column
 -----------------------------------------------------------------------
@@ -155,6 +154,7 @@ Column {data-width=250}
 #this was giving me lots of trouble, so I gave up
 observe({
   validate(need(input$map1_shape_click, FALSE))
+  validate(need(input$map1_shape_click %in% services.all$prov_id,FALSE))
 
   serv_text <- services.all %>% filter(prov_id==input$map1_shape_click$id)
   output$text1 <- renderUI({
